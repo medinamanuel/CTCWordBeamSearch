@@ -26,23 +26,28 @@ int main()
 
 	const std::chrono::system_clock::time_point startTime = std::chrono::system_clock::now();
 	size_t ctr = 0;
+	size_t nBestBeams = 5;
 	while (loader.hasNext())
 	{
 		// get data
 		const auto&  data=loader.getNext();
 
 		// decode it
-		const auto res = wordBeamSearch(data.mat, 10, lm, lmType);
+		const auto res = wordBeamSearch(data.mat, nBestBeams, 10, lm, lmType);
 
 		// show results
-		std::cout << "Sample: " << ctr + 1 << "\n";
-		std::cout << "Result:       \"" << lm->labelToUtf8(res) << "\"\n";
-		std::cout << "Ground Truth: \"" << lm->labelToUtf8(data.gt) << "\"\n";
-		metrics.addResult(data.gt, res);
-		std::cout << "Accumulated CER and WER so far: CER: " << metrics.getCER() << " WER: " << metrics.getWER() << "\n";
-		const std::chrono::system_clock::time_point currTime = std::chrono::system_clock::now();
-		std::cout << "Average Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(currTime-startTime).count()/(ctr+1) << "ms\n\n";
-		++ctr;
+		for (size_t i = 0; i < nBestBeams; i++)
+		  {
+		    std::cout << "Sample: " << ctr + 1 << "\n";
+		    std::cout << "Result:       \"" << lm->labelToUtf8(res[i]) << "\"\n";
+		    std::cout << "Ground Truth: \"" << lm->labelToUtf8(data.gt) << "\"\n";
+		    metrics.addResult(data.gt, res[i]);
+		    std::cout << "Accumulated CER and WER so far: CER: " << metrics.getCER() << " WER: " << metrics.getWER() << "\n";
+		    const std::chrono::system_clock::time_point currTime = std::chrono::system_clock::now();
+		    std::cout << "Average Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(currTime-startTime).count()/(ctr+1) << "ms\n\n";
+		    ++ctr;
+		  }
+		
 	}
 #endif
 

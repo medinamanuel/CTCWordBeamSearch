@@ -4,7 +4,7 @@
 #include <memory>
 
 
-std::vector<uint32_t> wordBeamSearch(const IMatrix& mat, size_t beamWidth, const std::shared_ptr<LanguageModel>& lm, LanguageModelType lmType)
+std::vector<std::vector<uint32_t>> wordBeamSearch(const IMatrix& mat, size_t nBestBeams, size_t beamWidth, const std::shared_ptr<LanguageModel>& lm, LanguageModelType lmType)
 {
 	// dim0: T, dim1: C
 	const size_t maxT = mat.rows();
@@ -61,10 +61,22 @@ std::vector<uint32_t> wordBeamSearch(const IMatrix& mat, size_t beamWidth, const
 		last = std::move(curr);
 	}
 
-	// return best entry
-	const auto bestBeam = last.getBestBeams(1)[0];
-	bestBeam->completeText();
-	return bestBeam->getText();
+
+	std::vector<std::vector<uint32_t>> bestBeamsText;
+	auto bestBeams = last.getBestBeams(nBestBeams);
+
+	for (size_t t = 0; t < nBestBeams && t < bestBeams.size(); t++)
+	  {
+
+	    // return best entry
+	    auto bestBeam = bestBeams[t];
+	    bestBeam->completeText();
+	    bestBeamsText.push_back(bestBeam->getText());
+
+	  }
+
+	return bestBeamsText;
+	
 }
 
 
