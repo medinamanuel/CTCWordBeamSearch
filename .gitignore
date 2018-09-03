@@ -1,6 +1,8 @@
 *.pyc
 *.svg
 data/bentham_testset/
+cpp/proj/WordBeamSearch.out.dSYM/
+*.*~
 out.csv
 *.out
 *.so
