@@ -14,7 +14,6 @@
 
 REGISTER_OP("WordBeamSearch")
 .Input("mat: float32")
-.Attr("nBestBeams: int")
 .Attr("beamWidth: int")
 .Attr("lmType: string")
 .Attr("lmSmoothing: float")
@@ -39,23 +38,16 @@ using namespace tensorflow;
 class TFWordBeamSearch : public OpKernel 
 {
 private:
-  std::shared_ptr<LanguageModel> m_lm;
-  size_t m_beamWidth=0;
-  size_t m_numChars=0;
-  size_t m_nBestBeams=1;
-  LanguageModelType m_lmType=LanguageModelType::Words;
+	std::shared_ptr<LanguageModel> m_lm;
+	size_t m_beamWidth=0;
+	size_t m_numChars=0;
+	LanguageModelType m_lmType=LanguageModelType::Words;
 
 public:
 	// CTOR
 	explicit TFWordBeamSearch(OpKernelConstruction* context) 
 	:OpKernel(context) 
 	{
-
-	  // read how many beams we're going to return
-	  int64 nBestBeams = 0;
-	  OP_REQUIRES_OK(context, context->GetAttr("nBestBeams", &nBestBeams));
-	  m_nBestBeams = static_cast<size_t>(nBestBeams);
-	  
 		// read beam width
 		int64 beamWidth64=0;
 		OP_REQUIRES_OK(context, context->GetAttr("beamWidth", &beamWidth64));
@@ -142,8 +134,8 @@ public:
 
 		// output: BxT, int32
 		Tensor* outputTensor = nullptr;
-		OP_REQUIRES_OK(context, context->allocate_output(0, TensorShape({B, m_nBestBeams, T}), &outputTensor));
-		auto outputMapped=outputTensor->tensor<int32,3>();
+		OP_REQUIRES_OK(context, context->allocate_output(0, TensorShape({B, T}), &outputTensor));
+		auto outputMapped=outputTensor->tensor<int32,2>();
 
 		// go over all batch elements
 		for(int b=0; b<B; ++b)
@@ -152,17 +144,13 @@ public:
 			MatrixTensor<decltype(inputMapped)> mat(inputMapped, b, T, C);
 
 			// apply decoding algorithm to batch element 
-			const std::vector<std::vector<uint32_t>> decoded=wordBeamSearch(mat, m_nBestBeams, m_beamWidth, m_lm, m_lmType);
+			const std::vector<uint32_t> decoded=wordBeamSearch(mat, m_beamWidth, m_lm, m_lmType);
 
 			// write to output tensor
-			for (size_t n=0; n < m_nBestBeams; ++n)
-			  {
-			    for(int t=0; t<T; ++t)
-			      {
-				outputMapped(b, n, t)=t<static_cast<int>(decoded.size()) ? decoded[n][t] : blank;
-			      }
-			  }
-			      
+			for(int t=0; t<T; ++t)
+			{
+				outputMapped(b, t)=t<static_cast<int>(decoded.size()) ? decoded[t] : blank;
+			}
 		}
 	}
 };

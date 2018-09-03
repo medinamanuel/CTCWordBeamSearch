@@ -65,7 +65,7 @@ void test()
 	// decode
 	DataLoader loader("../../data/test/", 1, LanguageModelType::NGrams);
 	const auto data=loader.getNext();
-	const auto decoded=wordBeamSearch(data.mat, 10, loader.getLanguageModel(), LanguageModelType::Words);
+	const auto decoded=wordBeamSearch(data.mat, 10, loader.getLanguageModel(), LanguageModelType::Words)[0];
 	assert(loader.getLanguageModel()->labelToUtf8(decoded) == "ba");
 
 	
