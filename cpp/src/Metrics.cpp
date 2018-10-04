@@ -85,20 +85,25 @@ std::pair<std::vector<uint32_t>, std::vector<uint32_t>> Metrics::getWordIDString
 }
 
 
-void Metrics::addResult(const std::vector<uint32_t>& gt, const std::vector<uint32_t>& rec)
+void Metrics::addResult(const std::string& gt, const std::string& rec)
 {
 	// CER
 	m_numChars += gt.size();
 	m_edChars += editDistance(gt, rec);
 
+	if (gt == rec)
+	  m_numCorrectWords++;
+
+	m_totalWordsSoFar++;
+
 	// WER
-	const auto idStrings = getWordIDStrings(gt, rec);
+	/*const auto idStrings = getWordIDStrings(gt, rec);
 	m_numWords += idStrings.first.size();
-	m_edWords += editDistance(idStrings.first, idStrings.second);
+	m_edWords += editDistance(idStrings.first, idStrings.second);*/
 }
 
 
-size_t Metrics::editDistance(const std::vector<uint32_t>& t1, const std::vector<uint32_t>& t2)
+size_t Metrics::editDistance(const std::string& t1, const std::string& t2)
 {
 	// taken from: https://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance
 	const std::size_t len1 = t1.size(), len2 = t2.size();
@@ -131,5 +136,10 @@ double Metrics::getCER() const
 double Metrics::getWER() const
 {
 	return m_numWords > 0 ? double(m_edWords) / double(m_numWords) : 0.0;
+}
+
+double Metrics::getAccuracy() const
+{
+  return m_numCorrectWords > 0 ? double(m_numCorrectWords) / double(m_totalWordsSoFar) : 0.0;
 }
 
